@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,7 +21,8 @@ public class ClawlKadai {
         //Files.createFile(filePath);//このコードを入れるとエラーになる
         BufferedWriter bw=Files.newBufferedWriter(filePath);
         List<Map<String,Integer>>studioMoneyMaps=new ArrayList<>();//スタジオごとの料金をソートするため
-        Map<String,Integer> studioMoneyMap=new HashMap<>();//スタジオの種類,料金
+        Map<String,String>studioNameMap=new HashMap<>();//スタジオのグレード,スタジオ名
+        Map<String,Integer> studioMoneyMap=new HashMap<>();//スタジオのグレード,料金
         String s = null;
         if(studioMoneyMap.containsKey(s)) {//ブロックの作成
         }else {
@@ -40,27 +39,35 @@ public class ClawlKadai {
             int b =Integer.parseInt(realMoneyB);
             studioMoneyMap.put(A, a);
             studioMoneyMap.put(B, b);
-            System.out.println("aille");
+            
             for(Entry<String,Integer>entry:studioMoneyMap.entrySet()) {
-                System.out.println(entry.getKey()+","+entry.getValue());
+                
             }
         }
-        studioMoneyMaps.add(studioMoneyMap);
-        if(studioMoneyMap.containsKey(s)) {
+        if(studioMoneyMap.containsKey(s)) {//ブロック(2つ目)
         }else {
             String rootUrl="https://sonysdance.com/";
             Document doc=Jsoup.connect(rootUrl).get();
             Element el=doc.select("#studio > div > div").get(0);
-            String A=el.select("div").get(0).text();//スタジオ一覧
-            String sinjuku="[新宿]";//新宿にあるスタジオだけ抽出
-            Pattern p=Pattern.compile(sinjuku);
-            Matcher m=p.matcher(A);
-            if(m.find()) {
-            System.out.println(A);
-            }else {
-                System.out.println("out");
+            Element child = el.select("div").get(2);
+            String A=el.select("div").get(1).text();//スタジオ一覧
+            
+            for(Element children:el.children()) {
+                if(children.children().size()<1) {
+                    continue;
+                }
+                String studio =children.select("dt").get(0).text();
+                if(studio.contains("新宿")) {
+                    String money =children.select("dd").get(1).text();//ddが3つある中の2番目
+                    String realMoney=money.replaceAll("[1時間：,円～]", "");
+                    int m=Integer.parseInt(realMoney);
+                    studioMoneyMap.put(studio, m);
+                }
+                
             }
-
+            studioMoneyMaps.add(studioMoneyMap);
+            System.out.println(studioMoneyMaps);
+            
         }
     }
 }
